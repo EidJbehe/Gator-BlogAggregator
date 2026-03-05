@@ -1,0 +1,26 @@
+{
+  "name": "gator",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "tsx ./src/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EidJbehe/Gator-BlogAggregator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EidJbehe/Gator-BlogAggregator/issues"
+  },
+  "homepage": "https://github.com/EidJbehe/Gator-BlogAggregator",
+  "description": "",
+  "devDependencies": {
+    "@types/node": "^25.3.3",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3"
+  }
+}
