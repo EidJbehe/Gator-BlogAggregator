@@ -1,4 +1,5 @@
 import { readConfig, setUser } from "./config";
+import { fetchFeed } from "./rss";
 import {
   createUser,
   getUserByName,
@@ -97,4 +98,8 @@ export async function handlerRegister(
   setUser(username);
   console.log(`user created: ${username}`);
   console.log(user);
+}
+export async function handlerAgg(cmdName: string, ...args: string[]): Promise<void> {
+  const feed = await fetchFeed("https://www.wagslane.dev/index.xml");
+    console.log(JSON.stringify(feed, null, 2));
 }
