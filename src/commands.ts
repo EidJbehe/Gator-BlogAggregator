@@ -1,5 +1,5 @@
 import { readConfig, setUser } from "./config";import { fetchFeed } from "./rss";import { createFeed, getFeeds, getFeedByUrl } from "./lib/db/queries/feeds";
-import { createFeedFollow, getFeedFollowsForUser } from "./lib/db/queries/feed_follows";
+import { createFeedFollow, getFeedFollowsForUser, deleteFeedFollowByUserAndUrl, } from "./lib/db/queries/feed_follows";
 import type { Feed, User } from "./lib/db/schema";
 import {
   createUser,
@@ -207,4 +207,19 @@ export async function handlerFollowing(
   for (const f of follows) {
     console.log(f.feedName);
   }
+}
+export async function handlerUnfollow(
+  cmdName: string,
+  user: User,
+  ...args: string[]
+): Promise<void> {
+  if (args.length < 1) {
+    throw new Error("unfollow command requires a url");
+  }
+
+  const url = args[0];
+
+  await deleteFeedFollowByUserAndUrl(user.id, url);
+
+  console.log("unfollowed");
 }
