@@ -1,8 +1,8 @@
-import { setUser } from "./config";
+import { readConfig, setUser } from "./config";
 import {
   createUser,
   getUserByName,
-  deleteAllUsers,
+  deleteAllUsers,  getUsers
 } from "./lib/db/queries/users";
 export async function handlerReset(
   cmdName: string,
@@ -39,7 +39,23 @@ export async function runCommand(
 
   await handler(cmdName, ...args);
 }
+export async function handlerUsers(
+  cmdName: string,
+  ...args: string[]
+): Promise<void> {
+  const cfg = readConfig();
+  const current = cfg.currentUserName;
 
+  const allUsers = await getUsers();
+
+  for (const user of allUsers) {
+    if (current && user.name === current) {
+      console.log(`* ${user.name} (current)`);
+    } else {
+      console.log(`* ${user.name}`);
+    }
+  }
+}
 export async function handlerLogin(
   cmdName: string,
   ...args: string[]
