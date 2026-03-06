@@ -1,4 +1,4 @@
-import { readConfig, setUser } from "./config";import { fetchFeed } from "./rss";import { createFeed } from "./lib/db/queries/feeds";
+import { readConfig, setUser } from "./config";import { fetchFeed } from "./rss";import { createFeed, getFeeds } from "./lib/db/queries/feeds";
 import type { Feed, User } from "./lib/db/schema";
 import {
   createUser,
@@ -20,6 +20,19 @@ function printFeed(feed: Feed, user: User) {
   console.log(`  User: ${user.name}`);
   console.log(`  CreatedAt: ${feed.createdAt}`);
   console.log(`  UpdatedAt: ${feed.updatedAt}`);
+}
+export async function handlerFeeds(
+  cmdName: string,
+  ...args: string[]
+): Promise<void> {
+  const allFeeds = await getFeeds();
+
+  for (const feed of allFeeds) {
+    console.log(`Name: ${feed.name}`);
+    console.log(`URL: ${feed.url}`);
+    console.log(`User: ${feed.userName}`);
+    console.log("--------------------");
+  }
 }
 export type CommandHandler = (
   cmdName: string,
