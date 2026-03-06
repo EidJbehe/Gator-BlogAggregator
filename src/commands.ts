@@ -1,5 +1,5 @@
-import { readConfig, setUser } from "./config";
-import { fetchFeed } from "./rss";
+import { readConfig, setUser } from "./config";import { fetchFeed } from "./rss";import { createFeed } from "./lib/db/queries/feeds";
+import type { Feed, User } from "./lib/db/schema";
 import {
   createUser,
   getUserByName,
@@ -11,6 +11,15 @@ export async function handlerReset(
 ): Promise<void> {
   await deleteAllUsers();
   console.log("database reset successful");
+}
+function printFeed(feed: Feed, user: User) {
+  console.log(`Feed created:`);
+  console.log(`  ID: ${feed.id}`);
+  console.log(`  Name: ${feed.name}`);
+  console.log(`  URL: ${feed.url}`);
+  console.log(`  User: ${user.name}`);
+  console.log(`  CreatedAt: ${feed.createdAt}`);
+  console.log(`  UpdatedAt: ${feed.updatedAt}`);
 }
 export type CommandHandler = (
   cmdName: string,
@@ -102,4 +111,34 @@ export async function handlerRegister(
 export async function handlerAgg(cmdName: string, ...args: string[]): Promise<void> {
   const feed = await fetchFeed("https://www.wagslane.dev/index.xml");
     console.log(JSON.stringify(feed, null, 2));
+}
+export async function handlerAddFeed(
+  cmdName: string,
+  ...args: string[]
+): Promise<void> {
+  
+  if (args.length < 2) {
+    throw new Error("addfeed command requires a name and a url");
+  }
+
+  const name = args[0];
+  const url = args[1];
+
+  const cfg = readConfig();
+  const currentUser = cfg.currentUserName;
+  if (!currentUser) {
+    throw new Error("no user is currently logged in");
+  }
+
+
+  const user = await getUserByName(currentUser);
+  if (!user) {
+    throw new Error("current user does not exist");
+  }
+
+ 
+  const feed = await createFeed(name, url, user.id);
+
+  
+  printFeed(feed, user);
 }
