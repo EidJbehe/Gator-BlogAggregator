@@ -1,6 +1,7 @@
 import { readConfig, setUser } from "./config";import { fetchFeed } from "./rss";import { createFeed, getFeeds, getFeedByUrl } from "./lib/db/queries/feeds";
 import { createFeedFollow, getFeedFollowsForUser, deleteFeedFollowByUserAndUrl, } from "./lib/db/queries/feed_follows";
 import type { Feed, User } from "./lib/db/schema";
+import { scrapeFeeds } from "./agg";
 import {
   createUser,
   getUserByName,
@@ -147,9 +148,36 @@ export async function handlerRegister(
   console.log(`user created: ${username}`);
   console.log(user);
 }
-export async function handlerAgg(cmdName: string, ...args: string[]): Promise<void> {
-  const feed = await fetchFeed("https://www.wagslane.dev/index.xml");
-    console.log(JSON.stringify(feed, null, 2));
+export async function handlerAgg(
+  cmdName: string,
+  ...args: string[]
+): Promise<void> {
+  if (args.length < 1) {
+    throw new Error("agg command requires a time_between_reqs argument");
+  }
+
+  const timeBetweenRequests = parseDuration(args[0]);
+
+  console.log(`Collecting feeds every ${args[0]}`);
+
+  const handleError = (err: unknown) => {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("Error scraping feeds:", message);
+  };
+
+  await scrapeFeeds().catch(handleError);
+
+  const interval = setInterval(() => {
+    scrapeFeeds().catch(handleError);
+  }, timeBetweenRequests);
+
+  await new Promise<void>((resolve) => {
+    process.on("SIGINT", () => {
+      console.log("Shutting down feed aggregator...");
+      clearInterval(interval);
+      resolve();
+    });
+  });
 }
 export async function handlerAddFeed(
   cmdName: string,
@@ -222,4 +250,28 @@ export async function handlerUnfollow(
   await deleteFeedFollowByUserAndUrl(user.id, url);
 
   console.log("unfollowed");
+}
+function parseDuration(durationStr: string): number {
+  const regex = /^(\d+)(ms|s|m|h)$/;
+  const match = durationStr.match(regex);
+
+  if (!match) {
+    throw new Error("invalid duration format");
+  }
+
+  const value = Number(match[1]);
+  const unit = match[2];
+
+  switch (unit) {
+    case "ms":
+      return value;
+    case "s":
+      return value * 1000;
+    case "m":
+      return value * 60 * 1000;
+    case "h":
+      return value * 60 * 60 * 1000;
+    default:
+      throw new Error("invalid duration unit");
+  }
 }

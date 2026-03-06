@@ -38,7 +38,6 @@ const args = process.argv.slice(2);
 
   try {
     await runCommand(registry, cmdName, ...cmdArgs);
-    process.exit(0);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(message);
