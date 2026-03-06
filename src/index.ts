@@ -4,7 +4,13 @@ import {
   runCommand,
   handlerLogin,
   handlerRegister,
-    handlerFeeds,handlerReset, handlerUsers, handlerAgg, handlerAddFeed
+  handlerReset,
+  handlerUsers,
+  handlerAgg,
+  handlerAddFeed,
+  handlerFeeds,
+  handlerFollow,
+  handlerFollowing,
 } from "./commands";
 async function main() {
   const registry: CommandsRegistry = {};
@@ -16,7 +22,9 @@ registerCommand(registry, "agg", handlerAgg);
 registerCommand(registry, "users", handlerUsers);
 registerCommand(registry, "feeds", handlerFeeds);
 registerCommand(registry, "addfeed", handlerAddFeed);
-  const args = process.argv.slice(2);
+registerCommand(registry, "follow", handlerFollow);
+registerCommand(registry, "following", handlerFollowing);  
+const args = process.argv.slice(2);
 
   if (args.length === 0) {
     console.error("not enough arguments");
