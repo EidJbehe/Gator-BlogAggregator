@@ -1,6 +1,16 @@
 import { setUser } from "./config";
-import { createUser, getUserByName } from "./lib/db/queries/users";
-
+import {
+  createUser,
+  getUserByName,
+  deleteAllUsers,
+} from "./lib/db/queries/users";
+export async function handlerReset(
+  cmdName: string,
+  ...args: string[]
+): Promise<void> {
+  await deleteAllUsers();
+  console.log("database reset successful");
+}
 export type CommandHandler = (
   cmdName: string,
   ...args: string[]
