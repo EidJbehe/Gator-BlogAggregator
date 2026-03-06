@@ -1,12 +1,19 @@
-import { readConfig, setUser } from "./config";import { fetchFeed } from "./rss";import { createFeed, getFeeds, getFeedByUrl } from "./lib/db/queries/feeds";
-import { createFeedFollow, getFeedFollowsForUser, deleteFeedFollowByUserAndUrl, } from "./lib/db/queries/feed_follows";
-import type { Feed, User } from "./lib/db/schema";
+import { readConfig, setUser } from "./config";
 import { scrapeFeeds } from "./agg";
+import { createFeed, getFeeds, getFeedByUrl } from "./lib/db/queries/feeds";
+import {
+  createFeedFollow,
+  getFeedFollowsForUser,
+  deleteFeedFollowByUserAndUrl,
+} from "./lib/db/queries/feed_follows";
+import type { Feed, User } from "./lib/db/schema";
 import {
   createUser,
   getUserByName,
-  deleteAllUsers,  getUsers
+  deleteAllUsers,
+  getUsers,
 } from "./lib/db/queries/users";
+import { getPostsForUser } from "./lib/db/queries/posts";
 function printFollow(feedName: string, userName: string) {
   console.log(`${feedName} - ${userName}`);
 }
@@ -41,6 +48,33 @@ export async function handlerFeeds(
     console.log(`Name: ${feed.name}`);
     console.log(`URL: ${feed.url}`);
     console.log(`User: ${feed.userName}`);
+    console.log("--------------------");
+  }
+}
+export async function handlerBrowse(
+  cmdName: string,
+  user: User,
+  ...args: string[]
+): Promise<void> {
+  let limit = 2;
+
+  if (args.length > 0) {
+    const parsedLimit = Number(args[0]);
+
+    if (isNaN(parsedLimit) || parsedLimit <= 0) {
+      throw new Error("limit must be a positive number");
+    }
+
+    limit = parsedLimit;
+  }
+
+  const posts = await getPostsForUser(user.id, limit);
+
+  for (const post of posts) {
+    console.log(`Title: ${post.title}`);
+    console.log(`URL: ${post.url}`);
+    console.log(`Published: ${post.publishedAt}`);
+    console.log(`Description: ${post.description}`);
     console.log("--------------------");
   }
 }
@@ -171,13 +205,16 @@ export async function handlerAgg(
     scrapeFeeds().catch(handleError);
   }, timeBetweenRequests);
 
-  await new Promise<void>((resolve) => {
-    process.on("SIGINT", () => {
-      console.log("Shutting down feed aggregator...");
-      clearInterval(interval);
-      resolve();
-    });
-  });
+ await new Promise<void>((resolve) => {
+  const shutdown = () => {
+    console.log("Shutting down feed aggregator...");
+    clearInterval(interval);
+    process.off("SIGINT", shutdown);
+    resolve();
+  };
+
+  process.on("SIGINT", shutdown);
+});
 }
 export async function handlerAddFeed(
   cmdName: string,

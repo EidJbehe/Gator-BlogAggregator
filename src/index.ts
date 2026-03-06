@@ -11,7 +11,7 @@ import {
   handlerFeeds,
   handlerFollow,
   handlerFollowing,
-middlewareLoggedIn,handlerUnfollow,
+middlewareLoggedIn,handlerUnfollow,handlerBrowse
 } from "./commands";
 async function main() {
   const registry: CommandsRegistry = {};
@@ -26,6 +26,7 @@ registerCommand(registry, "addfeed", middlewareLoggedIn(handlerAddFeed));
 registerCommand(registry, "follow", middlewareLoggedIn(handlerFollow));
 registerCommand(registry, "following", middlewareLoggedIn(handlerFollowing));  
 registerCommand(registry, "unfollow", middlewareLoggedIn(handlerUnfollow));
+registerCommand(registry, "browse", middlewareLoggedIn(handlerBrowse));
 const args = process.argv.slice(2);
 
   if (args.length === 0) {
@@ -37,8 +38,11 @@ const args = process.argv.slice(2);
   const cmdArgs = args.slice(1);
 
   try {
-    await runCommand(registry, cmdName, ...cmdArgs);
-  } catch (err) {
+  await runCommand(registry, cmdName, ...cmdArgs);
+
+  if (cmdName !== "agg") {
+    process.exit(0);
+  } } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     console.error(message);
     process.exit(1);
